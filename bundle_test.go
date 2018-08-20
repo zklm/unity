@@ -1,6 +1,7 @@
 package unity
 
 import (
+	"fmt"
 	"path/filepath"
 	"testing"
 )
@@ -17,12 +18,13 @@ func TestReadBundle(t *testing.T) {
 	}
 
 	asset := bundle.Assets[0]
-	if asset.Name != "CAB-be1d08a614f11a49e601c02ba4c4f640" {
-		t.Error(err.Error())
+	expected := "CAB-be1d08a614f11a49e601c02ba4c4f640"
+	if asset.Name != expected {
+		t.Error(fmt.Errorf("Invalid asset name. Got: %s Expected: %s", asset.Name, expected))
 	}
 
 	objects := asset.Objects
 	if len(objects) != 2 {
-		t.Error(err.Error())
+		t.Error(fmt.Errorf("Invalid object count. Got: %v Expected: %v", len(objects), 2))
 	}
 }
