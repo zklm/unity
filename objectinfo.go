@@ -39,9 +39,13 @@ func ReadObjectInfo(asset *Asset, reader *Reader) (obj *ObjectInfo, err error) {
 			return
 		}
 	} else {
-		// TODO
-		typeID, _ := reader.Int32()
-		fmt.Println(typeID)
+		typeIndex, _ := reader.Int32()
+		if len(asset.Tree.ClassIDs) <= int(typeIndex) {
+			return nil, fmt.Errorf("unity.ReadObjectInfo: Undefined type metadata. TypeIndex: %v", typeIndex)
+		}
+		classID := asset.Tree.ClassIDs[typeIndex]
+		obj.TypeID = classID
+		obj.ClassID = int16(classID)
 	}
 
 	if asset.Format < 11 {
