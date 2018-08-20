@@ -7,24 +7,34 @@ import (
 )
 
 func TestReadBundle(t *testing.T) {
-	path, _ := filepath.Abs("test/20147_cs_h")
-	bundle, err := ReadBundle(path)
-	if err != nil {
-		t.Error(err.Error())
+	bundles := []struct {
+		path      string
+		name      string
+		objectLen int
+	}{
+		{"test/20147_cs_h", "CAB-be1d08a614f11a49e601c02ba4c4f640", 2},
+		{"test/main_dxt1_bc1.unity3d", "CAB-ba01e3c16ba268ec36e9543a39dc83ad", 4},
 	}
 
-	if err = bundle.ResolveAsset(0); err != nil {
-		t.Error(err.Error())
-	}
+	for _, tc := range bundles {
+		path, _ := filepath.Abs(tc.path)
+		bundle, err := ReadBundle(path)
+		if err != nil {
+			t.Error(err.Error())
+		}
 
-	asset := bundle.Assets[0]
-	expected := "CAB-be1d08a614f11a49e601c02ba4c4f640"
-	if asset.Name != expected {
-		t.Error(fmt.Errorf("Invalid asset name. Got: %s Expected: %s", asset.Name, expected))
-	}
+		if err = bundle.ResolveAsset(0); err != nil {
+			t.Error(err.Error())
+		}
 
-	objects := asset.Objects
-	if len(objects) != 2 {
-		t.Error(fmt.Errorf("Invalid object count. Got: %v Expected: %v", len(objects), 2))
+		asset := bundle.Assets[0]
+		if asset.Name != tc.name {
+			t.Error(fmt.Errorf("Invalid asset name. Got: %s Expected: %s", asset.Name, tc.name))
+		}
+
+		objects := asset.Objects
+		if len(objects) != tc.objectLen {
+			t.Error(fmt.Errorf("Invalid object count. Got: %v Expected: %v", len(objects), tc.objectLen))
+		}
 	}
 }
