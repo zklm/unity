@@ -37,6 +37,7 @@ func AssetFromBundle(bundle *Bundle, reader *Reader) *Asset {
 		Bundle:  bundle,
 		Adds:    make(map[int64]int32),
 		Objects: make(map[int64]ObjectInfo),
+		Types:   make(map[int32]TypeTree),
 	}
 
 	offset := reader.Tell()
@@ -116,9 +117,9 @@ func (a *Asset) Load(sig string) error {
 }
 
 func (a *Asset) LoadFromBuffer() (err error) {
-	// if _, err := a.Reader.SeekStart(a.BundleOffset); err != nil {
-	// 	panic(err)
-	// }
+	if _, err := a.Reader.SeekStart(a.BundleOffset); err != nil {
+		return fmt.Errorf("unity.Asset.LoadFromBuffer: Couldn't seek to offset %v", a.BundleOffset)
+	}
 	a.MetadataSize, err = a.Reader.Uint32()
 	a.FileSize, _ = a.Reader.Uint32()
 	a.Format, _ = a.Reader.Uint32()
@@ -130,10 +131,8 @@ func (a *Asset) LoadFromBuffer() (err error) {
 		a.Reader.ChangeEndian(a.IsLittleEndian)
 	}
 
-	if tree, err := ReadTypeMetadata(a.Reader, a.IsLittleEndian, a.Format); err != nil {
+	if a.Tree, err = ReadTypeMetadata(a.Reader, a.IsLittleEndian, a.Format); err != nil {
 		return err
-	} else {
-		a.Tree = tree
 	}
 
 	if a.Format >= 7 && a.Format < 14 {
@@ -148,20 +147,16 @@ func (a *Asset) LoadFromBuffer() (err error) {
 			a.Reader.Align()
 		}
 
-		if obj, err := ReadObjectInfo(a, a.Reader); err != nil {
+		obj, err := ReadObjectInfo(a, a.Reader)
+		if err != nil {
 			return err
-		} else {
-			a.registerObject(obj)
 		}
+
+		a.registerObject(obj)
 	}
 
 	if a.Format >= 11 {
-		// TODO
 		numAdds, _ := a.Reader.Uint32()
-		if numAdds > 100000 {
-			return nil
-		}
-
 		for i := uint32(0); i < numAdds; i++ {
 			if a.Format >= 14 {
 				a.Reader.Align()

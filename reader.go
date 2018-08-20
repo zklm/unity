@@ -75,10 +75,10 @@ func (r *Reader) Remaining() int64 {
 }
 
 func (r *Reader) Align() (int64, error) {
-	oldPos := r.Len() - r.Remaining()
-	newPos := (oldPos + 3) & -4
-	if newPos > oldPos {
-		return r.SeekStart(int64(newPos - oldPos))
+	old := r.Tell()
+	new := (old + 3) & -4
+	if new > old {
+		return r.SeekStart(new)
 	}
 	return r.off, nil
 }
